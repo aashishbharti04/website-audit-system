@@ -8,7 +8,7 @@ services:
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - AI_MODEL=${AI_MODEL:-claude-sonnet-4-6}
-      - DATABASE_URL=postgresql+psycopg://seotuners:seotuners@db:5432/seotuners
+      - DATABASE_URL=postgresql+psycopg://audit:audit@db:5432/audit
       - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
     depends_on:
       - db
@@ -16,9 +16,9 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      - POSTGRES_USER=seotuners
-      - POSTGRES_PASSWORD=seotuners
-      - POSTGRES_DB=seotuners
+      - POSTGRES_USER=audit
+      - POSTGRES_PASSWORD=audit
+      - POSTGRES_DB=audit
     ports:
       - "5432:5432"
     volumes:

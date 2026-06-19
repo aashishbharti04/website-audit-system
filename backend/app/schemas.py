@@ -19,6 +19,14 @@ class AuditOptions(BaseModel):
     check_performance: bool = True  # Google PageSpeed Insights (Core Web Vitals)
     client_name: Optional[str] = None
     primary_keyword: Optional[str] = None  # for basic keyword-optimisation checks
+    # Per-request API keys entered in the UI Settings panel. When present they override
+    # the server's env vars, so the deployment needs no keys of its own.
+    anthropic_api_key: Optional[str] = Field(None, description="Overrides ANTHROPIC_API_KEY for this audit.")
+    google_psi_api_key: Optional[str] = Field(None, description="Overrides GOOGLE_PSI_API_KEY for this audit.")
+    ai_model: Optional[str] = Field(None, description="Overrides the AI model for this audit.")
+    # AI provider selection. "anthropic" uses the Claude API; "ollama" uses a local Ollama server.
+    ai_provider: Optional[str] = Field(None, description='"anthropic" (cloud) or "ollama" (local).')
+    ollama_base_url: Optional[str] = Field(None, description="Overrides the Ollama server URL for this audit.")
 
 
 class AuditRequest(BaseModel):

@@ -28,11 +28,14 @@ def _savings_kb(audits: dict, key: str) -> float | None:
     return None
 
 
-async def core_web_vitals(url: str, strategy: str = "mobile") -> CoreWebVitals:
+async def core_web_vitals(
+    url: str, strategy: str = "mobile", api_key: str | None = None
+) -> CoreWebVitals:
     cfg = get_settings()
+    key = api_key or cfg.google_psi_api_key  # per-request key (UI Settings) wins over env
     params = {"url": url, "strategy": strategy, "category": "performance"}
-    if cfg.google_psi_api_key:
-        params["key"] = cfg.google_psi_api_key
+    if key:
+        params["key"] = key
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             resp = await client.get(PSI_ENDPOINT, params=params)

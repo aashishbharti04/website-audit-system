@@ -54,6 +54,16 @@ def start_audit(url: str, options: AuditOptions) -> str:
 async def run_audit(audit_id: str, url: str, options: AuditOptions) -> AuditResult:
     cfg = get_settings()
     audit = AUDITS[audit_id]
+    # Per-request settings from the UI Settings panel override the server env vars.
+    psi_key = options.google_psi_api_key or cfg.google_psi_api_key
+    provider = (options.ai_provider or cfg.ai_provider or "anthropic").lower()
+    ai_key = options.anthropic_api_key or cfg.anthropic_api_key
+    if provider == "ollama":
+        ai_model = options.ai_model or cfg.ollama_model
+        ai_enabled = True  # local server; no key needed (falls back to rules if unreachable)
+    else:
+        ai_model = options.ai_model or cfg.ai_model
+        ai_enabled = bool(ai_key)
     try:
         # 1. crawl
         await _emit(audit_id, AuditStatus.crawling, f"Crawling {url}…", 5)
@@ -81,7 +91,7 @@ async def run_audit(audit_id: str, url: str, options: AuditOptions) -> AuditResu
         if options.check_performance:
             await _emit(audit_id, AuditStatus.measuring_performance,
                         "Measuring Core Web Vitals (PageSpeed Insights)…", 68)
-            crawl_result.vitals = await core_web_vitals(crawl_result.start_url)
+            crawl_result.vitals = await core_web_vitals(crawl_result.start_url, api_key=psi_key)
 
         # 4. rule-based analysis (always)
         await _emit(audit_id, AuditStatus.analyzing, "Running 7-category audit…", 74)
@@ -89,14 +99,18 @@ async def run_audit(audit_id: str, url: str, options: AuditOptions) -> AuditResu
 
         # 4. AI analysis (optional)
         analysis = rules
-        if options.use_ai and cfg.ai_enabled:
-            await _emit(audit_id, AuditStatus.analyzing, f"Analysing with {cfg.ai_model}…", 80)
+        if options.use_ai and ai_enabled:
+            label = f"{provider}:{ai_model}" if provider == "ollama" else ai_model
+            await _emit(audit_id, AuditStatus.analyzing, f"Analysing with {label}…", 80)
             try:
-                analysis = await asyncio.to_thread(analyze_with_ai, crawl_result, rules)
+                analysis = await asyncio.to_thread(
+                    analyze_with_ai, crawl_result, rules,
+                    provider, ai_key, ai_model, options.ollama_base_url,
+                )
             except Exception as e:  # never let an AI hiccup kill the audit — fall back to rules
                 await _emit(audit_id, AuditStatus.analyzing, f"AI step failed ({e}); using rule-based report.", 88)
                 analysis = rules
-        elif options.use_ai and not cfg.ai_enabled:
+        elif options.use_ai and not ai_enabled:
             await _emit(audit_id, AuditStatus.analyzing, "No AI key set — using rule-based report.", 85)
 
         audit.analysis = analysis

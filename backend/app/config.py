@@ -14,18 +14,25 @@ class Settings(BaseSettings):
     product_name: str = "Website Audit & Recommendation System"
 
     # --- AI ---
+    # Provider for the AI analysis layer: "anthropic" (cloud) or "ollama" (local).
+    ai_provider: str = "anthropic"
     anthropic_api_key: Optional[str] = None
     # The architecture specifies Sonnet 4.6 (best speed/cost for this volume).
     # Swap to "claude-opus-4-8" for the deepest analysis.
     ai_model: str = "claude-sonnet-4-6"
     ai_max_tokens: int = 12000
 
+    # --- local AI (Ollama) ---
+    # A locally-running Ollama server — free, private, no API key. Use any pulled model.
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.1"
+
     # --- performance (Google PageSpeed Insights) ---
     # PSI works without a key at low volume; set one for higher quota.
     google_psi_api_key: Optional[str] = None
 
     # --- crawler ---
-    user_agent: str = "SeoTunersAuditBot/1.0 (+https://seotuners.com)"
+    user_agent: str = "WebsiteAuditBot/1.0 (+https://example.com)"
     request_timeout: float = 15.0
     crawl_concurrency: int = 8
     link_check_concurrency: int = 20
@@ -34,11 +41,11 @@ class Settings(BaseSettings):
     database_url: Optional[str] = None  # e.g. postgresql+psycopg://user:pass@host/db
 
     # --- branding (white-label) ---
-    agency_name: str = "SeoTuners"
+    agency_name: str = "Your Agency"
     agency_logo_url: str = ""
     agency_primary_color: str = "#2563eb"
-    agency_website: str = "https://seotuners.com"
-    agency_email: str = "hello@seotuners.com"
+    agency_website: str = "https://example.com"
+    agency_email: str = "hello@example.com"
 
     # --- server ---
     # Origins allowed to call the API from a browser. The live GitHub Pages site is

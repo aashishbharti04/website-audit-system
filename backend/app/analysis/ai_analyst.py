@@ -71,28 +71,93 @@ def summarize_crawl(crawl: CrawlResult, rule_findings: AIAnalysis | None = None)
     return payload
 
 
-def analyze_with_ai(crawl: CrawlResult, rule_findings: AIAnalysis | None = None) -> AIAnalysis:
-    """Run the Claude analysis. Raises if no API key is configured (caller should check first)."""
+_USER_PREAMBLE = (
+    "Here is the audit data (crawl + Lighthouse + rule-based findings). "
+    "Return the structured audit.\n\n"
+)
+
+
+def analyze_with_ai(
+    crawl: CrawlResult,
+    rule_findings: AIAnalysis | None = None,
+    provider: str | None = None,
+    api_key: str | None = None,
+    model: str | None = None,
+    ollama_base_url: str | None = None,
+) -> AIAnalysis:
+    """Run the AI analysis with the chosen provider. Raises on misconfiguration/transport
+    errors so the caller can fall back to the rule-based report.
+
+    All args (from the UI Settings panel) override the server's env config.
+    """
+    cfg = get_settings()
+    prov = (provider or cfg.ai_provider or "anthropic").lower()
+    if prov == "ollama":
+        return _analyze_with_ollama(crawl, rule_findings, model=model, base_url=ollama_base_url)
+    return _analyze_with_anthropic(crawl, rule_findings, api_key=api_key, model=model)
+
+
+def _analyze_with_anthropic(
+    crawl: CrawlResult,
+    rule_findings: AIAnalysis | None,
+    api_key: str | None,
+    model: str | None,
+) -> AIAnalysis:
     import anthropic
 
     cfg = get_settings()
-    if not cfg.ai_enabled:
-        raise RuntimeError("ANTHROPIC_API_KEY is not set; AI analysis unavailable.")
+    key = api_key or cfg.anthropic_api_key  # per-request key (UI Settings) wins over env
+    if not key:
+        raise RuntimeError("No Anthropic API key available; AI analysis unavailable.")
 
-    client = anthropic.Anthropic(api_key=cfg.anthropic_api_key)
+    client = anthropic.Anthropic(api_key=key)
     payload = summarize_crawl(crawl, rule_findings)
 
     response = client.messages.parse(
-        model=cfg.ai_model,
+        model=model or cfg.ai_model,
         max_tokens=cfg.ai_max_tokens,
         system=SYSTEM_PROMPT,
         messages=[{
             "role": "user",
-            "content": (
-                "Here is the audit data (crawl + Lighthouse + rule-based findings). "
-                "Return the structured audit.\n\n" + json.dumps(payload, ensure_ascii=False, default=str)
-            ),
+            "content": _USER_PREAMBLE + json.dumps(payload, ensure_ascii=False, default=str),
         }],
         output_format=AIAnalysis,
     )
     return response.parsed_output
+
+
+def _analyze_with_ollama(
+    crawl: CrawlResult,
+    rule_findings: AIAnalysis | None,
+    model: str | None,
+    base_url: str | None,
+) -> AIAnalysis:
+    """Run the analysis against a local Ollama server using structured (JSON-schema) output.
+
+    Needs a running Ollama (`ollama serve`) with the model pulled (e.g. `ollama pull llama3.1`).
+    """
+    import httpx
+
+    cfg = get_settings()
+    base = (base_url or cfg.ollama_base_url).rstrip("/")
+    name = model or cfg.ollama_model
+    payload = summarize_crawl(crawl, rule_findings)
+
+    body = {
+        "model": name,
+        "stream": False,
+        "format": AIAnalysis.model_json_schema(),  # constrain output to our schema
+        "options": {"temperature": 0.2, "num_predict": cfg.ai_max_tokens},
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": _USER_PREAMBLE + json.dumps(payload, ensure_ascii=False, default=str)},
+        ],
+    }
+    try:
+        resp = httpx.post(f"{base}/api/chat", json=body, timeout=httpx.Timeout(600.0))
+        resp.raise_for_status()
+    except httpx.HTTPError as e:
+        raise RuntimeError(f"Could not reach Ollama at {base} ({e}).") from e
+
+    content = (resp.json().get("message") or {}).get("content") or ""
+    return AIAnalysis.model_validate_json(content)

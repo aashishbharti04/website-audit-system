@@ -61,7 +61,17 @@ API at `http://localhost:8000` · docs at `/docs` · health at `/api/health`.
 
 > **PDF export** needs WeasyPrint's native libs (in the Dockerfile). Without them, HTML export works and the API returns a clear 501 for PDF.
 
-### Frontend (Next.js + Tailwind + Shadcn)
+### Frontend — single-file HTML (default, no build step)
+The backend **serves the whole UI** at its root: just start the backend and open
+**`http://localhost:8000/`**. The dashboard ([frontend/index.html](frontend/index.html)) is one
+self-contained HTML file (vanilla JS + CSS) — same-origin, so live WebSocket progress and report
+exports work with zero CORS setup. Open it directly as a file too; set the backend URL under **Settings**.
+
+**API keys via the UI.** Open **Settings** in the sidebar to paste your **Anthropic** key (AI analysis)
+and optional **Google PageSpeed** key. Keys are stored **only in your browser** (localStorage) and sent
+with each audit request, overriding the server's env vars — so the server needs no keys of its own.
+
+### Frontend — Next.js (optional, alternative)
 ```bash
 cd frontend
 npm install
@@ -117,4 +127,4 @@ cd backend && python -m pytest -q     # parser, 7-category rules, scoring, repor
 
 ---
 
-© Website Doctor AI · internal tool for SeoTuners. Confidential.
+© Website Audit & Recommendation System.
