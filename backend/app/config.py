@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # --- product ---
-    product_name: str = "Website Doctor AI"
+    product_name: str = "Website Audit & Recommendation System"
 
     # --- AI ---
     anthropic_api_key: Optional[str] = None

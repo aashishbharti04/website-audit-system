@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { AuditOptions } from "@/lib/api";
 
-export function UrlForm({ onStart, busy }: { onStart: (url: string, o: AuditOptions) => void; busy: boolean }) {
+export function UrlForm({ onStart, busy, onSample, demoMode }: {
+  onStart: (url: string, o: AuditOptions) => void;
+  busy: boolean;
+  onSample?: () => void;
+  demoMode?: boolean;
+}) {
   const [url, setUrl] = useState("");
   const [clientName, setClientName] = useState("");
   const [keyword, setKeyword] = useState("");
@@ -64,9 +69,16 @@ export function UrlForm({ onStart, busy }: { onStart: (url: string, o: AuditOpti
                 {label as string}
               </label>
             ))}
-            <Button type="submit" disabled={busy} className="ml-auto">
-              {busy ? "Auditing…" : "Run audit"}
-            </Button>
+            <div className="ml-auto flex gap-2">
+              {onSample && (
+                <Button type="button" variant="outline" onClick={onSample} disabled={busy}>
+                  View sample report
+                </Button>
+              )}
+              <Button type="submit" disabled={busy}>
+                {busy ? "Auditing…" : demoMode ? "Run (demo)" : "Run audit"}
+              </Button>
+            </div>
           </div>
         </form>
       </CardContent>

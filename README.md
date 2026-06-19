@@ -1,11 +1,17 @@
-# 🩺 Website Doctor AI — Website Audit & Recommendation System
+# 🩺 Website Audit & Recommendation System
 
-An internal, white-label tool for the agency: enter a client URL, it crawls the whole site,
-runs a **7-category audit** (with real Core Web Vitals from Google) plus an AI analysis, and
-produces a **branded, prioritised report** (HTML + PDF) with per-category scores and a P1/P2/P3
-action plan your team can hand straight to clients.
+Enter a client URL → it crawls the whole site, runs a **7-category audit** (with real Core Web
+Vitals from Google) plus an AI analysis, and produces a **branded, prioritised report** with
+per-category scores and a P1/P2/P3 action plan — exportable as **PDF, Word (.docx) and HTML**.
 
-> **Private / internal.** Contains agency branding — not open source.
+[![Live demo](https://img.shields.io/badge/▶_Live_demo-2563eb?style=for-the-badge)](https://aashishbharti04.github.io/website-audit-recommendation-system/)
+
+> **Live site = UI demo.** GitHub Pages is static-only, so the live link runs in
+> **sample-report demo mode** (no real crawling). To run real audits, host the FastAPI backend
+> (Railway/Render/VPS) and set `NEXT_PUBLIC_API_BASE`, or run it locally (below).
+
+**Highlights:** Next.js + Tailwind + Shadcn UI · **light / dark / system** theme · sidebar + user
+guide · 7-category engine · Google PageSpeed Core Web Vitals · Claude analysis · PDF / Word / HTML export.
 
 ---
 

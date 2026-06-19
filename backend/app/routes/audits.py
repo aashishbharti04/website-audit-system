@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse, Response
 
 from ..audit import get_audit, start_audit
-from ..report import render_html, render_pdf, weasyprint_available
+from ..report import docx_available, render_docx, render_html, render_pdf, weasyprint_available
 from ..schemas import AuditRequest, AuditResult
 
 router = APIRouter(prefix="/api/audits", tags=["audits"])
@@ -49,10 +49,25 @@ def report_pdf(audit_id: str) -> Response:
         )
     pdf = render_pdf(audit)
     domain = audit.crawl.domain if audit.crawl else "site"
-    filename = f"seo-audit-{domain}.pdf"
+    filename = f"website-audit-{domain}.pdf"
     return Response(
         pdf,
         media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/{audit_id}/report.docx")
+def report_docx(audit_id: str) -> Response:
+    audit = _require_done(audit_id)
+    if not docx_available():
+        raise HTTPException(501, "Word export unavailable (python-docx not installed).")
+    data = render_docx(audit)
+    domain = audit.crawl.domain if audit.crawl else "site"
+    filename = f"website-audit-{domain}.docx"
+    return Response(
+        data,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 

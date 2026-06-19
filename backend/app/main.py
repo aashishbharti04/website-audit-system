@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import __version__
 from .config import get_settings
-from .report import weasyprint_available
+from .report import docx_available, weasyprint_available
 from .routes import audits, ws
 
 cfg = get_settings()
@@ -38,5 +38,6 @@ def health() -> dict:
         "ai_enabled": cfg.ai_enabled,
         "ai_model": cfg.ai_model if cfg.ai_enabled else None,
         "pdf_enabled": weasyprint_available(),
+        "docx_enabled": docx_available(),
         "agency": cfg.agency_name,
     }

@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScoreRing } from "./ScoreRing";
-import { type Audit, reportHtmlUrl, reportPdfUrl } from "@/lib/api";
-import { IMPACT_COLOR, SEV_COLOR, SEV_HEX, scoreBg, scoreColor } from "@/lib/utils";
+import { type Audit, reportDocxUrl, reportHtmlUrl, reportPdfUrl } from "@/lib/api";
+import { IMPACT_COLOR, SEV_COLOR, SEV_HEX, cn, scoreBg, scoreColor } from "@/lib/utils";
 
 const PRIORITIES = ["P1 — Critical", "P2 — Important", "P3 — Recommended"];
 
@@ -29,8 +29,9 @@ export function ReportView({ audit }: { audit: Audit }) {
             <h2 className="text-xl font-bold">Audit results</h2>
             <p className="mt-1 text-sm text-muted-foreground">{a.executive_summary}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button asChild variant="outline"><a href={reportHtmlUrl(audit.id)} target="_blank" rel="noopener">Open HTML report</a></Button>
-              <Button asChild><a href={reportPdfUrl(audit.id)} target="_blank" rel="noopener">Download PDF</a></Button>
+              <a className={cn(buttonVariants({ variant: "outline" }))} href={reportHtmlUrl(audit.id)} target="_blank" rel="noopener">Open HTML</a>
+              <a className={cn(buttonVariants())} href={reportPdfUrl(audit.id)} target="_blank" rel="noopener">Download PDF</a>
+              <a className={cn(buttonVariants({ variant: "secondary" }))} href={reportDocxUrl(audit.id)} target="_blank" rel="noopener">Download Word</a>
             </div>
           </div>
         </CardContent>

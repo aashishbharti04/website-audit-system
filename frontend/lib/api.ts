@@ -1,4 +1,8 @@
-// API client + shared types for the Website Doctor AI dashboard.
+// API client + shared types for the Website Audit & Recommendation System dashboard.
+
+// Backend base URL. Empty = same-origin (dev uses Next rewrites to :8000).
+// On GitHub Pages set NEXT_PUBLIC_API_BASE to your hosted FastAPI URL to enable real audits.
+export const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
 
 export interface AuditOptions {
   max_pages: number;
@@ -57,11 +61,13 @@ export interface Audit {
 }
 
 export async function health() {
-  return (await fetch("/api/health")).json();
+  const r = await fetch(`${API_BASE}/api/health`);
+  if (!r.ok) throw new Error("backend unavailable");
+  return r.json();
 }
 
 export async function startAudit(url: string, options: AuditOptions) {
-  const r = await fetch("/api/audits", {
+  const r = await fetch(`${API_BASE}/api/audits`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url, options }),
@@ -71,21 +77,24 @@ export async function startAudit(url: string, options: AuditOptions) {
 }
 
 export async function getAudit(id: string): Promise<Audit> {
-  const r = await fetch(`/api/audits/${id}`);
+  const r = await fetch(`${API_BASE}/api/audits/${id}`);
   if (!r.ok) throw new Error("Audit not found");
   return r.json();
 }
 
-export const reportHtmlUrl = (id: string) => `/api/audits/${id}/report.html`;
-export const reportPdfUrl = (id: string) => `/api/audits/${id}/report.pdf`;
+export const reportHtmlUrl = (id: string) => `${API_BASE}/api/audits/${id}/report.html`;
+export const reportPdfUrl = (id: string) => `${API_BASE}/api/audits/${id}/report.pdf`;
+export const reportDocxUrl = (id: string) => `${API_BASE}/api/audits/${id}/report.docx`;
 
 export function subscribeProgress(
   id: string,
   onEvent: (e: { status: string; message: string; pct: number }) => void,
   onDone?: (last?: { status: string; message: string; pct: number }) => void
 ) {
-  const proto = location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${proto}://${location.host}/ws/audits/${id}`);
+  const wsBase = API_BASE
+    ? API_BASE.replace(/^http/, "ws")
+    : `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}`;
+  const ws = new WebSocket(`${wsBase}/ws/audits/${id}`);
   ws.onmessage = (e) => {
     const data = JSON.parse(e.data);
     onEvent(data);
