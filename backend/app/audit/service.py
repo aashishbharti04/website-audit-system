@@ -10,7 +10,7 @@ import asyncio
 import uuid
 from datetime import datetime, timezone
 
-from ..analysis import analyze_with_ai, rule_based_analysis
+from ..analysis import analyze_with_ai, core_web_vitals, rule_based_analysis
 from ..config import get_settings
 from ..crawler import check_links, crawl
 from ..schemas import AuditOptions, AuditResult, AuditStatus, ProgressEvent
@@ -77,9 +77,15 @@ async def run_audit(audit_id: str, url: str, options: AuditOptions) -> AuditResu
             crawl_result.broken_links = broken
             crawl_result.links_checked = checked
 
-        # 3. rule-based analysis (always)
-        await _emit(audit_id, AuditStatus.analyzing, "Running SEO checks…", 72)
-        rules = rule_based_analysis(crawl_result)
+        # 3. performance — Core Web Vitals via Google PageSpeed Insights (homepage)
+        if options.check_performance:
+            await _emit(audit_id, AuditStatus.measuring_performance,
+                        "Measuring Core Web Vitals (PageSpeed Insights)…", 68)
+            crawl_result.vitals = await core_web_vitals(crawl_result.start_url)
+
+        # 4. rule-based analysis (always)
+        await _emit(audit_id, AuditStatus.analyzing, "Running 7-category audit…", 74)
+        rules = rule_based_analysis(crawl_result, primary_keyword=options.primary_keyword)
 
         # 4. AI analysis (optional)
         analysis = rules

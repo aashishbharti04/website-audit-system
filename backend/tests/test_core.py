@@ -45,7 +45,7 @@ def test_parse_page_extracts_signals():
     assert page.h1 == ["Welcome to Acme"]
     assert page.h2_count == 1
     assert page.canonical == "https://acme.test/"
-    assert page.has_viewport and page.has_open_graph and page.has_schema
+    assert page.has_viewport and page.has_open_graph and page.jsonld_types
     assert page.images_total == 2 and page.images_missing_alt == 1
     assert page.internal_links == 1 and page.external_links == 1
     assert page.word_count >= 400
@@ -70,10 +70,21 @@ def test_report_renders_html():
     crawl = CrawlResult(start_url="https://acme.test/", domain="acme.test",
                         pages=[page], links_checked=2, crawled_at=datetime.now(timezone.utc))
     analysis = rule_based_analysis(crawl)
+    assert analysis.category_scores  # per-category scores produced
+    assert all(0 <= c.score <= 100 for c in analysis.category_scores)
     audit = AuditResult(id="test123", url="https://acme.test/", status=AuditStatus.done,
                         created_at=datetime.now(timezone.utc), crawl=crawl, analysis=analysis,
                         score=analysis.score)
     html = render_html(audit)
-    assert "SEO Audit Report" in html
+    assert "Website Audit Report" in html
     assert "acme.test" in html
     assert "Executive summary" in html
+    assert "Action plan" in html
+    assert "Category scores" in html
+
+
+def test_new_signals_parsed():
+    page, _ = parse_page("https://acme.test/", SAMPLE_HTML, 200, 120, "acme.test")
+    assert page.readability is not None  # 400-word sample is long enough
+    assert "Organization" in page.jsonld_types
+    assert page.content_hash is not None

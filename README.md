@@ -1,122 +1,114 @@
-# 🔍 SeoTuners — White-Label SEO Audit SaaS
+# 🩺 Website Doctor AI — Website Audit & Recommendation System
 
-An internal, white-label SEO audit tool for the agency: enter a client URL, it crawls the
-site, runs deterministic SEO checks **and** an AI analysis, and produces a branded,
-prioritised report (HTML + PDF) your team can hand to clients.
+An internal, white-label tool for the agency: enter a client URL, it crawls the whole site,
+runs a **7-category audit** (with real Core Web Vitals from Google) plus an AI analysis, and
+produces a **branded, prioritised report** (HTML + PDF) with per-category scores and a P1/P2/P3
+action plan your team can hand straight to clients.
 
-> **Private / internal.** This repository contains agency branding and is not open source.
+> **Private / internal.** Contains agency branding — not open source.
 
 ---
 
 ## Architecture
 
 ```
-Frontend (React / Vite)         Backend (FastAPI / Python)              AI + data
-┌───────────────────────┐  REST ┌────────────────────────────┐  API ┌─────────────────────┐
-│ URL input + options   │ ─────▶│ Crawler   (httpx + BS4)     │ ────▶│ Claude API          │
-│ Live progress (WS)    │  WS   │ Link checker (aiohttp)      │      │  (claude-sonnet-4-6)│
-│ Report viewer         │ ◀──── │ Rules engine (deterministic)│      │ PostgreSQL (history)│
-│ Export PDF / HTML     │       │ AI analyst (structured out) │      │  (optional, Phase 5)│
-└───────────────────────┘       │ Report builder (WeasyPrint) │      └─────────────────────┘
-                                └────────────────────────────┘
+Frontend (Next.js + Tailwind + Shadcn)      Backend (FastAPI / Python)               AI + data
+┌──────────────────────────────┐   REST/WS  ┌──────────────────────────────┐  API  ┌────────────────────┐
+│ URL + options                │ ─────────▶ │ Crawler (httpx, depth-aware) │ ────▶ │ Claude API          │
+│ Live progress (WebSocket)    │            │ Link checker (aiohttp)       │       │  (claude-sonnet-4-6)│
+│ Score rings + category cards │            │ robots/sitemap/HTTPS checks  │       │ Google PageSpeed    │
+│ Action plan (P1/P2/P3)       │ ◀───────── │ Rules engine (7 categories)  │ ◀──── │  Insights (Vitals)  │
+│ HTML / PDF export            │            │ AI analyst (structured out)  │       │ PostgreSQL (history)│
+└──────────────────────────────┘            │ Report builder (WeasyPrint)  │       └────────────────────┘
+                                            └──────────────────────────────┘
 ```
 
-## What's built (all 5 phases scaffolded)
+## What it checks (7 categories)
 
-| Phase | Area | Status |
-|------|------|--------|
-| **1** | **Crawler** — async BFS crawl (`httpx`), on-page SEO extraction (`BeautifulSoup`), async link checker (`aiohttp`) | ✅ working |
-| **2** | **AI analysis** — real crawl data → Claude via **structured outputs** (`messages.parse` + Pydantic), with a graceful fallback to the rules engine if no key | ✅ working |
-| **3** | **Report builder** — branded HTML (Jinja2) + PDF (WeasyPrint), shared template, white-label config | ✅ working (PDF needs native libs) |
-| **4** | **React dashboard** — URL form → live WebSocket progress → filterable report → HTML/PDF export | ✅ working |
-| **5** | **History & persistence** — SQLAlchemy model + Postgres wiring for per-domain audit history | 🟡 scaffolded (in-memory store active; flip to DB via `db.py`) |
+1. **Technical SEO** — HTTPS, mixed content, robots.txt, XML sitemap, redirect chains, broken links (404s), canonicals, duplicate pages, crawl depth, indexability (noindex), unreachable pages.
+2. **On-Page SEO** — missing/duplicate titles, title length, missing/duplicate meta descriptions, missing/multiple H1, image ALT text, weak internal linking, target-keyword-in-title.
+3. **Performance** — **real Core Web Vitals via Google PageSpeed Insights** (LCP, CLS, INP, TBT, performance score), unused CSS/JS, heavy images.
+4. **Content** — thin content, readability (Flesch), FAQ presence/schema, originality reminder (AI-content detection is flagged as an estimate, not a verdict).
+5. **Local SEO** — LocalBusiness/Organization schema, Review/AggregateRating schema, NAP (phone/address) presence & consistency.
+6. **UX & Conversion** — call-to-action presence, contact form, mobile responsiveness (viewport).
+7. **Accessibility** — form-field labels, `lang` attribute, plus a flagged manual pass for colour-contrast & keyboard nav (these need rendering).
 
-A **deterministic rules engine** (`analysis/rules.py`) runs on every audit, so the tool is
-useful even before you add a Claude key — and it gives the AI verified findings to expand on
-rather than invent.
+Each category gets a **0–100 score**; issues carry **severity, priority (P1/P2/P3), impact and difficulty**.
+
+### Honesty by design
+A deterministic **rules engine** runs on every audit (works with no API key) and feeds the AI
+verified findings to expand on. Things no tool can do reliably — AI-content detection, competitor
+gaps, full WCAG, field FID — are **labelled as estimates**, never presented as fact. If PageSpeed
+data isn't available, the Performance category is **excluded from scoring** rather than faked.
 
 ## Quick start
 
 ### Backend
-
 ```bash
 cd backend
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env        # add ANTHROPIC_API_KEY for AI analysis (optional)
+cp .env.example .env        # add ANTHROPIC_API_KEY (AI) + GOOGLE_PSI_API_KEY (vitals) — both optional
 uvicorn app.main:app --reload
 ```
+API at `http://localhost:8000` · docs at `/docs` · health at `/api/health`.
 
-API now at `http://localhost:8000` (`/api/health`, interactive docs at `/docs`).
+> **PDF export** needs WeasyPrint's native libs (in the Dockerfile). Without them, HTML export works and the API returns a clear 501 for PDF.
 
-> **PDF export** needs WeasyPrint's native libraries (pango/cairo). They're baked into the
-> backend `Dockerfile`; for local installs see the
-> [WeasyPrint install guide](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html).
-> Without them, HTML export still works and the API returns a clear 501 for PDF.
-
-### Frontend
-
+### Frontend (Next.js + Tailwind + Shadcn)
 ```bash
 cd frontend
 npm install
-npm run dev        # http://localhost:5173 (proxies /api + /ws to :8000)
+npm run dev        # http://localhost:3000 (proxies /api + /ws to :8000 via next.config rewrites)
 ```
 
 ### Docker (API + Postgres)
-
 ```bash
 ANTHROPIC_API_KEY=sk-... docker compose up --build
 ```
 
-## How it works
-
-1. `POST /api/audits` `{ url, options }` → returns an audit `id`, starts a background job.
-2. The dashboard opens `ws://…/ws/audits/{id}` and streams **live progress** (crawl → links → analysis).
-3. The job: crawl → check links → **rules engine** → **Claude analysis** → assemble result.
-4. `GET /api/audits/{id}` returns the full result; `…/report.html` and `…/report.pdf` export it.
-
-## Configuration
-
-All via env (`backend/.env` — see `.env.example`). Highlights:
-
-| Var | Purpose |
-|---|---|
-| `ANTHROPIC_API_KEY` | Enables AI analysis. Without it, the rules engine is used. |
-| `AI_MODEL` | `claude-sonnet-4-6` (default, best cost/speed for this volume) or `claude-opus-4-8`. |
-| `AGENCY_NAME` / `AGENCY_LOGO_URL` / `AGENCY_PRIMARY_COLOR` / … | White-label branding on every report. |
-| `DATABASE_URL` | Postgres for audit history (Phase 5). |
+## Flow
+1. `POST /api/audits` `{ url, options }` → audit `id`, background job starts.
+2. Dashboard opens `ws://…/ws/audits/{id}` → **live progress** (crawl → links → vitals → analysis).
+3. Job: crawl → check links → **PageSpeed Insights** → **rules engine (7 cats)** → **Claude** → result.
+4. `GET /api/audits/{id}` → full result; `…/report.html` & `…/report.pdf` export the branded report.
 
 ## Tech stack
-
 | Layer | Tool |
 |---|---|
+| Frontend | Next.js · Tailwind · Shadcn-style UI · TypeScript |
 | Backend | Python · FastAPI · httpx · BeautifulSoup · aiohttp |
+| Performance | Google PageSpeed Insights (Lighthouse) |
 | AI | Anthropic SDK (`claude-sonnet-4-6`), structured outputs |
 | Reports | Jinja2 + WeasyPrint |
-| Frontend | React + Vite |
-| DB | PostgreSQL (SQLAlchemy) — optional |
+| DB | PostgreSQL (SQLAlchemy) — optional, scaffolded |
 | Deploy | Docker / Railway / Render |
 
-## Cost to run
+## Configuration (env — see `backend/.env.example`)
+| Var | Purpose |
+|---|---|
+| `ANTHROPIC_API_KEY` | Enables AI analysis (else rules engine only). |
+| `GOOGLE_PSI_API_KEY` | Higher PageSpeed quota (works keyless at low volume). |
+| `AI_MODEL` | `claude-sonnet-4-6` (default) or `claude-opus-4-8`. |
+| `PRODUCT_NAME`, `AGENCY_*` | White-label branding on the UI and every report. |
+| `DATABASE_URL` | Postgres for audit history (Phase 5). |
 
-- Claude API: ~$0.10–0.30 per audit (Sonnet 4.6, depends on site size)
-- Hosting: ~$5–10/mo (Railway/Render) · Postgres free tier to start
-- **Under ~$20/mo at agency scale.**
+## Cost
+~$0.10–0.30 per audit (Sonnet 4.6) · PageSpeed free · hosting ~$5–10/mo · **under ~$20/mo** at agency scale.
 
 ## Tests
-
 ```bash
-cd backend && python -m pytest -q     # parser, rules engine, report builder (no network/key)
+cd backend && python -m pytest -q     # parser, 7-category rules, scoring, report — no network/key
 ```
 
-## Roadmap
-
-- [ ] Wire `db.py` persistence into the audit service + a history view per client domain
-- [ ] Agency login / multi-user auth (Phase 5)
-- [ ] Optional DataForSEO integration for real SERP positions & keyword rankings
-- [ ] Scheduled re-audits + score-trend charts
-- [ ] PageSpeed Insights / Core Web Vitals enrichment
+## Roadmap (the "Website Doctor AI" product vision)
+- [ ] **Lead-gen funnel** — free score → email-gate the full PDF → capture qualified SEO leads
+- [ ] Wire `db.py` persistence + audit-history / score-trend per client domain
+- [ ] Agency login / multi-user auth
+- [ ] **Competitor gap analysis** + DataForSEO keyword rankings
+- [ ] Headless render pass (JS-heavy SPA sites) and full WCAG via axe-core
+- [ ] GBP landing-page & local-pack optimisation module
 
 ---
 
-© SeoTuners — internal tool. Confidential.
+© Website Doctor AI · internal tool for SeoTuners. Confidential.

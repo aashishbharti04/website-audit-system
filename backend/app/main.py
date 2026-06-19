@@ -34,6 +34,7 @@ def health() -> dict:
     return {
         "status": "ok",
         "version": __version__,
+        "product": cfg.product_name,
         "ai_enabled": cfg.ai_enabled,
         "ai_model": cfg.ai_model if cfg.ai_enabled else None,
         "pdf_enabled": weasyprint_available(),

@@ -10,12 +10,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+    # --- product ---
+    product_name: str = "Website Doctor AI"
+
     # --- AI ---
     anthropic_api_key: Optional[str] = None
     # The architecture specifies Sonnet 4.6 (best speed/cost for this volume).
     # Swap to "claude-opus-4-8" for the deepest analysis.
     ai_model: str = "claude-sonnet-4-6"
-    ai_max_tokens: int = 8000
+    ai_max_tokens: int = 12000
+
+    # --- performance (Google PageSpeed Insights) ---
+    # PSI works without a key at low volume; set one for higher quota.
+    google_psi_api_key: Optional[str] = None
 
     # --- crawler ---
     user_agent: str = "SeoTunersAuditBot/1.0 (+https://seotuners.com)"

@@ -2,97 +2,147 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>SEO Audit — {{ client_name }}</title>
+<title>Website Audit — {{ client_name }}</title>
 <style>
-  @page { size: A4; margin: 18mm 14mm; @bottom-center { content: "{{ agency.name }} · SEO Audit · page " counter(page) " of " counter(pages); font-size: 9px; color: #9ca3af; } }
+  @page { size: A4; margin: 16mm 13mm; @bottom-center { content: "{{ product_name }} by {{ agency.name }} · page " counter(page) " / " counter(pages); font-size: 9px; color: #9ca3af; } }
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #111827; margin: 0; line-height: 1.5; font-size: 13px; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #111827; margin: 0; line-height: 1.5; font-size: 12.5px; }
   .accent { color: {{ agency.primary }}; }
-  .cover { padding: 36px 0 24px; border-bottom: 3px solid {{ agency.primary }}; margin-bottom: 28px; }
-  .brand { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; letter-spacing: -.3px; }
-  .brand img { height: 36px; }
-  h1 { font-size: 30px; margin: 18px 0 6px; letter-spacing: -.5px; }
+  .cover { padding: 30px 0 22px; border-bottom: 3px solid {{ agency.primary }}; margin-bottom: 24px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 800; }
+  .brand img { height: 34px; }
+  h1 { font-size: 28px; margin: 16px 0 4px; letter-spacing: -.5px; }
   .muted { color: #6b7280; }
-  .meta-row { display: flex; gap: 28px; margin-top: 14px; flex-wrap: wrap; }
-  .meta-row div span { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; }
-  .meta-row div b { font-size: 15px; }
-  .scorewrap { display: flex; align-items: center; gap: 24px; margin: 8px 0 30px; }
-  .score { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; flex-shrink: 0; }
-  .score b { font-size: 40px; line-height: 1; } .score span { font-size: 12px; opacity: .9; }
-  .summary { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 18px; }
-  h2 { font-size: 17px; margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
-  .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
-  .pill { padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 700; color: #fff; }
-  .wins { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px 18px 14px 34px; }
-  .wins li { margin: 5px 0; }
-  .issue { border: 1px solid #e5e7eb; border-left-width: 5px; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; page-break-inside: avoid; }
-  .issue-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .issue-head h3 { font-size: 14px; margin: 0; }
-  .tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #fff; padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
-  .cat { font-size: 11px; color: #6b7280; }
+  .meta-row { display: flex; gap: 26px; margin-top: 12px; flex-wrap: wrap; }
+  .meta-row div span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; }
+  .meta-row div b { font-size: 14px; }
+  .scorewrap { display: flex; align-items: center; gap: 22px; margin: 6px 0 22px; }
+  .score { width: 110px; height: 110px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; flex-shrink: 0; }
+  .score b { font-size: 38px; line-height: 1; } .score span { font-size: 11px; opacity: .9; }
+  .summary { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 16px; flex: 1; }
+  h2 { font-size: 16px; margin: 26px 0 11px; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
+  .cats { display: flex; flex-wrap: wrap; gap: 10px; }
+  .catcard { flex: 1; min-width: 130px; border: 1px solid #e5e7eb; border-radius: 9px; padding: 11px 13px; }
+  .catcard .cscore { font-size: 22px; font-weight: 800; }
+  .catcard .cname { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .catcard .cbar { height: 5px; border-radius: 99px; background: #eef2f7; margin-top: 7px; overflow: hidden; }
+  .catcard .cfill { height: 100%; border-radius: 99px; }
+  .vitals { display: flex; gap: 10px; flex-wrap: wrap; }
+  .vital { border: 1px solid #e5e7eb; border-radius: 9px; padding: 10px 13px; min-width: 110px; }
+  .vital span { display: block; font-size: 10px; color: #9ca3af; text-transform: uppercase; }
+  .vital b { font-size: 17px; }
+  .wins { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 18px 12px 32px; }
+  .plan h3 { font-size: 13.5px; margin: 16px 0 8px; }
+  .issue { border: 1px solid #e5e7eb; border-left-width: 5px; border-radius: 8px; padding: 11px 14px; margin-bottom: 9px; page-break-inside: avoid; }
+  .issue-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .issue-head h4 { font-size: 13.5px; margin: 0; }
+  .cat { font-size: 11px; color: #6b7280; font-weight: 500; }
+  .tags { display: flex; gap: 5px; flex-shrink: 0; }
+  .tag { font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: #fff; padding: 3px 7px; border-radius: 5px; white-space: nowrap; }
   .issue p { margin: 6px 0 0; }
-  .rec { background: #f9fafb; border-radius: 6px; padding: 8px 10px; margin-top: 8px; font-size: 12px; }
+  .rec { background: #f9fafb; border-radius: 6px; padding: 7px 10px; margin-top: 7px; font-size: 12px; }
   .rec b { color: {{ agency.primary }}; }
-  .affected { font-size: 11px; color: #9ca3af; margin-top: 6px; word-break: break-all; }
-  table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eee; }
+  .affected { font-size: 10.5px; color: #9ca3af; margin-top: 5px; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid #eee; }
   th { color: #6b7280; text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
-  .footer { margin-top: 34px; padding-top: 14px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 11px; text-align: center; }
+  .chip { font-weight: 700; padding: 2px 8px; border-radius: 5px; color: #fff; font-size: 11px; }
+  ul.expected { columns: 2; }
+  .footer { margin-top: 30px; padding-top: 12px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 10.5px; text-align: center; }
 </style>
 </head>
 <body>
   <div class="cover">
     <div class="brand">
       {% if agency.logo_url %}<img src="{{ agency.logo_url }}" alt="{{ agency.name }}" />{% endif %}
-      <span class="accent">{{ agency.name }}</span>
+      <span class="accent">🩺 {{ product_name }}</span>
     </div>
-    <h1>SEO Audit Report</h1>
-    <div class="muted">Prepared for <b>{{ client_name }}</b></div>
+    <h1>Website Audit Report</h1>
+    <div class="muted">Prepared for <b>{{ client_name }}</b> by {{ agency.name }}</div>
     <div class="meta-row">
       <div><span>Website</span><b>{{ audit.url }}</b></div>
-      <div><span>Pages analysed</span><b>{{ crawl.pages|length if crawl else 0 }}</b></div>
+      <div><span>Pages</span><b>{{ crawl.pages|length if crawl else 0 }}</b></div>
       <div><span>Links checked</span><b>{{ crawl.links_checked if crawl else 0 }}</b></div>
+      <div><span>HTTPS</span><b>{{ "Yes" if crawl and crawl.https else "No" }}</b></div>
       <div><span>Date</span><b>{{ generated_at }}</b></div>
     </div>
   </div>
 
   {% set s = score if score is not none else 0 %}
-  {% set scolor = '#16a34a' if s >= 80 else ('#d97706' if s >= 50 else '#dc2626') %}
   <div class="scorewrap">
-    <div class="score" style="background: {{ scolor }}"><b>{{ s }}</b><span>/ 100</span></div>
-    <div class="summary">
-      <b>Executive summary</b><br/>
-      {{ analysis.executive_summary if analysis else "No analysis available." }}
-    </div>
+    <div class="score" style="background: {{ score_color(s) }}"><b>{{ s }}</b><span>/ 100</span></div>
+    <div class="summary"><b>Executive summary</b><br/>{{ analysis.executive_summary if analysis else "No analysis available." }}</div>
   </div>
 
-  <div class="pills">
-    {% for sev, count in by_sev.items() %}
-      <span class="pill" style="background: {{ sev_color[sev] }}">{{ count }} {{ sev }}</span>
+  <h2>Category scores</h2>
+  <div class="cats">
+    {% for c in category_scores %}
+      <div class="catcard">
+        <div class="cscore" style="color: {{ score_color(c.score) }}">{{ c.score }}</div>
+        <div class="cname">{{ c.category.value }} · {{ c.issue_count }} issue(s)</div>
+        <div class="cbar"><div class="cfill" style="width: {{ c.score }}%; background: {{ score_color(c.score) }}"></div></div>
+      </div>
     {% endfor %}
   </div>
 
-  {% if analysis and analysis.quick_wins %}
-  <h2>⚡ Quick wins</h2>
-  <ul class="wins">
-    {% for w in analysis.quick_wins %}<li>{{ w }}</li>{% endfor %}
-  </ul>
+  {% if vitals and vitals.source == "psi" %}
+  <h2>Core Web Vitals (mobile · PageSpeed Insights)</h2>
+  <div class="vitals">
+    <div class="vital"><span>Performance</span><b>{{ vitals.performance_score if vitals.performance_score is not none else "—" }}</b></div>
+    <div class="vital"><span>LCP</span><b>{{ "%.1fs"|format(vitals.lcp_ms/1000) if vitals.lcp_ms else "—" }}</b></div>
+    <div class="vital"><span>CLS</span><b>{{ "%.3f"|format(vitals.cls) if vitals.cls is not none else "—" }}</b></div>
+    <div class="vital"><span>INP</span><b>{{ "%.0fms"|format(vitals.inp_ms) if vitals.inp_ms else "—" }}</b></div>
+    <div class="vital"><span>TBT</span><b>{{ "%.0fms"|format(vitals.tbt_ms) if vitals.tbt_ms else "—" }}</b></div>
+  </div>
   {% endif %}
 
-  <h2>Prioritised issues ({{ issues|length }})</h2>
-  {% for i in issues %}
-    <div class="issue" style="border-left-color: {{ sev_color[i.severity.value] }}">
-      <div class="issue-head">
-        <h3>{{ i.title }} <span class="cat">· {{ i.category.value }}</span></h3>
-        <span class="tag" style="background: {{ sev_color[i.severity.value] }}">{{ i.severity.value }}</span>
-      </div>
-      <p>{{ i.description }}</p>
-      <div class="rec"><b>Fix:</b> {{ i.recommendation }}</div>
-      {% if i.affected %}<div class="affected">Affected: {{ i.affected }}</div>{% endif %}
-    </div>
-  {% else %}
-    <p class="muted">No issues detected. 🎉</p>
-  {% endfor %}
+  {% if analysis and analysis.quick_wins %}
+  <h2>⚡ Quick wins</h2>
+  <ul class="wins">{% for w in analysis.quick_wins %}<li>{{ w }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <h2>Recommended fixes</h2>
+  <table>
+    <thead><tr><th>Issue</th><th>Category</th><th>Impact</th><th>Difficulty</th></tr></thead>
+    <tbody>
+      {% for i in fixes %}
+      <tr>
+        <td>{{ i.title }}</td>
+        <td>{{ i.category.value }}</td>
+        <td><span class="chip" style="background: {{ impact_color.get(i.impact.value, '#6b7280') }}">{{ i.impact.value }}</span></td>
+        <td>{{ i.difficulty.value }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Action plan</h2>
+  <div class="plan">
+    {% for prio, items in action_plan.items() %}
+      {% if items %}
+      <h3>{{ prio }} ({{ items|length }})</h3>
+      {% for i in items %}
+        <div class="issue" style="border-left-color: {{ sev_color[i.severity.value] }}">
+          <div class="issue-head">
+            <h4>{{ i.title }} <span class="cat">· {{ i.category.value }}</span></h4>
+            <div class="tags">
+              <span class="tag" style="background: {{ impact_color.get(i.impact.value, '#6b7280') }}">{{ i.impact.value }} impact</span>
+              <span class="tag" style="background: {{ sev_color[i.severity.value] }}">{{ i.severity.value }}</span>
+            </div>
+          </div>
+          <p>{{ i.description }}</p>
+          <div class="rec"><b>Fix:</b> {{ i.recommendation }} <span class="muted">· {{ i.difficulty.value }}</span></div>
+          {% if i.affected %}<div class="affected">Affected: {{ i.affected }}</div>{% endif %}
+        </div>
+      {% endfor %}
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% if analysis and analysis.expected_results %}
+  <h2>Expected results</h2>
+  <ul class="expected">{% for r in analysis.expected_results %}<li>{{ r }}</li>{% endfor %}</ul>
+  {% endif %}
 
   {% if crawl and crawl.broken_links %}
   <h2>Broken links ({{ crawl.broken_links|length }})</h2>
@@ -107,8 +157,8 @@
   {% endif %}
 
   <div class="footer">
-    Generated by {{ agency.name }} · {{ agency.website }} · {{ agency.email }}<br/>
-    © {{ generated_at[-8:] | default('') }} {{ agency.name }}. This report is confidential and prepared exclusively for {{ client_name }}.
+    Generated by {{ product_name }} · {{ agency.name }} · {{ agency.website }} · {{ agency.email }}<br/>
+    Confidential — prepared exclusively for {{ client_name }}. Performance data from Google PageSpeed Insights.
   </div>
 </body>
 </html>
