@@ -10,9 +10,12 @@ venv/
 .env
 *.local
 
-# Node
+# Node / Next.js
 node_modules/
 frontend/dist/
+frontend/.next/
+frontend/out/
+next-env.d.ts
 npm-debug.log*
 
 # Editor / OS
