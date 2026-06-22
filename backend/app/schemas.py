@@ -216,3 +216,19 @@ class AuditResult(BaseModel):
     analysis: Optional[AIAnalysis] = None
     score: Optional[int] = None
     error: Optional[str] = None
+
+
+# ---------- stateless report (e.g. from a Google Opal app) ----------
+class ReportRequest(BaseModel):
+    """Render a Word/HTML report directly from an analysis payload — no crawl/job needed.
+
+    Lets external no-code tools (Google Opal, Zapier, etc.) POST the audit JSON they built
+    and get back a branded .docx, reusing the same report builder as the live app.
+    """
+    url: str = ""
+    client_name: Optional[str] = None
+    https: bool = True
+    pages_count: int = 0
+    links_checked: int = 0
+    analysis: AIAnalysis
+    vitals: Optional[CoreWebVitals] = None

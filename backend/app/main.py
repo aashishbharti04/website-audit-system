@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from . import __version__
 from .config import get_settings
 from .report import docx_available, weasyprint_available
-from .routes import audits, ws
+from .routes import audits, report, ws
 
 # Single-page HTML UI (vanilla JS) — served same-origin so the dashboard, WebSocket
 # progress and report exports all work without any CORS configuration.
@@ -33,6 +33,7 @@ app.add_middleware(
 )
 
 app.include_router(audits.router)
+app.include_router(report.router)
 app.include_router(ws.router)
 
 
